@@ -1,0 +1,49 @@
+name: spine-leaf-topology
+
+topology:
+  nodes:
+    csr-spine:
+      kind: vr-csr
+      image: vrnetlab/vr-csr:17.03.08
+      mgmt-ipv4: 172.20.20.2
+    
+    csr-leaf:
+      kind: vr-csr
+      image: vrnetlab/vr-csr:17.03.08
+      mgmt-ipv4: 172.20.20.3
+    
+    n9kv-spine:
+      kind: vr-n9kv
+      image: vrnetlab/vr-n9kv:10.5.1
+      mgmt-ipv4: 172.20.20.4
+    
+    n9kv-leaf:
+      kind: vr-n9kv
+      image: vrnetlab/vr-n9kv:10.5.1
+      mgmt-ipv4: 172.20.20.5
+    
+    vjunosswitch-spine:
+      kind: juniper_vjunosswitch
+      image: vrnetlab/vr-vjunosswitch:23.2R1.14
+      mgmt-ipv4: 172.20.20.6
+    
+    vjunosswitch-leaf:
+      kind: juniper_vjunosswitch
+      image: vrnetlab/vr-vjunosswitch:23.2R1.14
+      mgmt-ipv4: 172.20.20.7
+
+  links:
+    # Dual connections between spine and leaf nodes
+    - endpoints: ["csr-spine:eth1", "csr-leaf:eth1"]
+    - endpoints: ["csr-spine:eth2", "csr-leaf:eth2"]
+    
+    - endpoints: ["n9kv-spine:eth1", "n9kv-leaf:eth1"]
+    - endpoints: ["n9kv-spine:eth2", "n9kv-leaf:eth2"]
+    
+    - endpoints: ["vjunosswitch-spine:eth1", "vjunosswitch-leaf:eth1"]
+    - endpoints: ["vjunosswitch-spine:eth2", "vjunosswitch-leaf:eth2"]
+    
+    # Connections between spine nodes
+    - endpoints: ["csr-spine:eth3", "n9kv-spine:eth3"]
+    - endpoints: ["csr-spine:eth4", "vjunosswitch-spine:eth3"]
+    - endpoints: ["n9kv-spine:eth4", "vjunosswitch-spine:eth4"]

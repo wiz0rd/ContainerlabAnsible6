@@ -1,0 +1,54 @@
+name: spine-leaf-topology
+topology:
+  nodes:
+    csr-spine:
+      kind: vr-csr
+      image: vrnetlab/vr-csr:17.03.08
+      mgmt-ipv4: 172.20.20.2
+      startup-config: ./clab-spine-leaf-topology/csr-spine/config/backup.conf
+    
+    csr-leaf:
+      kind: vr-csr
+      image: vrnetlab/vr-csr:17.03.08
+      mgmt-ipv4: 172.20.20.3
+      startup-config: ./clab-spine-leaf-topology/csr-leaf/config/backup.conf
+    
+    n9kv-spine:
+      kind: vr-n9kv
+      image: vrnetlab/vr-n9kv:10.5.1
+      mgmt-ipv4: 172.20.20.4
+      startup-config: ./clab-spine-leaf-topology/n9kv-spine/config/backup.conf
+    
+    n9kv-leaf:
+      kind: vr-n9kv
+      image: vrnetlab/vr-n9kv:10.5.1
+      mgmt-ipv4: 172.20.20.5
+      startup-config: ./clab-spine-leaf-topology/n9kv-leaf/config/backup.conf
+    
+    vjunosswitch-spine:
+      kind: juniper_vjunosswitch
+      image: vrnetlab/vr-vjunosswitch:23.2R1.14
+      mgmt-ipv4: 172.20.20.6
+      startup-config: ./clab-spine-leaf-topology/vjunosswitch-spine/config/backup.conf
+    
+    vjunosswitch-leaf:
+      kind: juniper_vjunosswitch
+      image: vrnetlab/vr-vjunosswitch:23.2R1.14
+      mgmt-ipv4: 172.20.20.7
+      startup-config: ./clab-spine-leaf-topology/vjunosswitch-leaf/config/backup.conf
+
+  links:
+    # Dual connections between spine and leaf nodes for LAGs
+    - endpoints: ["csr-spine:eth2", "csr-leaf:eth2"]
+    - endpoints: ["csr-spine:eth3", "csr-leaf:eth3"]
+    
+    - endpoints: ["n9kv-spine:eth2", "n9kv-leaf:eth2"]
+    - endpoints: ["n9kv-spine:eth3", "n9kv-leaf:eth3"]
+    
+    - endpoints: ["vjunosswitch-spine:eth1", "vjunosswitch-leaf:eth1"]
+    - endpoints: ["vjunosswitch-spine:eth2", "vjunosswitch-leaf:eth2"]
+    
+    # Connections between spine nodes
+    - endpoints: ["csr-spine:eth4", "n9kv-spine:eth4"]
+    - endpoints: ["csr-spine:eth5", "vjunosswitch-spine:eth3"]
+    - endpoints: ["n9kv-spine:eth5", "vjunosswitch-spine:eth4"]
