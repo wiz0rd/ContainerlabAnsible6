@@ -1,0 +1,116 @@
+---
+- name: Network Device Hardening
+  hosts: all
+  gather_facts: no
+  vars:
+    ansible_command_timeout: 300
+
+  tasks:
+    - name: Ping test for Cisco IOS
+      cisco.ios.ios_ping:
+        dest: "{{ ansible_host }}"
+      when: inventory_hostname in groups['vr-csr']
+      register: ping_result_ios
+      ignore_errors: yes
+
+    - name: Ping test for Cisco NXOS
+      cisco.nxos.nxos_ping:
+        dest: "{{ ansible_host }}"
+      when: inventory_hostname in groups['vr-n9kv']
+      register: ping_result_nxos
+      ignore_errors: yes
+
+    - name: Ping test for Juniper
+      junipernetworks.junos.junos_ping:
+        dest: "{{ ansible_host }}"
+      when: inventory_hostname in groups['juniper_vjunosswitch']
+      register: ping_result_junos
+      ignore_errors: yes
+
+    - name: Display ping results
+      debug:
+        var: "{{ item }}"
+      loop:
+        - ping_result_ios
+        - ping_result_nxos
+        - ping_result_junos
+      when: item is defined
+
+    - name: Generate config for Cisco CSR
+      template:
+        src: templates/csr.j2
+        dest: "./{{ inventory_hostname }}_csr.tmp"
+      when: inventory_hostname in groups['vr-csr']
+
+    - name: Generate config for Cisco N9KV
+      template:
+        src: templates/nxos.j2
+        dest: "./{{ inventory_hostname }}_nxos.tmp"
+      when: inventory_hostname in groups['vr-n9kv']
+
+    - name: Generate config for Juniper vSwitch
+      template:
+        src: templates/junos.j2
+        dest: "./{{ inventory_hostname }}_junos.tmp"
+      when: inventory_hostname in groups['juniper_vjunosswitch']
+
+    - name: Apply config to Cisco CSR
+      cisco.ios.ios_config:
+        src: "./{{ inventory_hostname }}_csr.tmp"
+        save_when: modified
+      register: ios_diff
+      when: inventory_hostname in groups['vr-csr']
+
+    - name: Apply config to Cisco N9KV
+      cisco.nxos.nxos_config:
+        src: "./{{ inventory_hostname }}_nxos.tmp"
+        save_when: modified
+      register: nxos_diff
+      when: inventory_hostname in groups['vr-n9kv']
+
+    - name: Apply config to Juniper vSwitch
+      junipernetworks.junos.junos_config:
+        src: "./{{ inventory_hostname }}_junos.tmp"
+        update: merge
+        commit: yes
+      register: junos_diff
+      when: inventory_hostname in groups['juniper_vjunosswitch']
+
+    - name: Display config differences
+      debug:
+        var: "{{ item }}"
+      loop:
+        - ios_diff
+        - nxos_diff
+        - junos_diff
+      when: item is defined
+
+    - name: Verify Cisco CSR configuration
+      cisco.ios.ios_command:
+        commands:
+          - show running-config
+      register: ios_verify
+      when: inventory_hostname in groups['vr-csr']
+
+    - name: Verify Cisco N9KV configuration
+      cisco.nxos.nxos_command:
+        commands:
+          - show running-config
+      register: nxos_verify
+      when: inventory_hostname in groups['vr-n9kv']
+
+    - name: Verify Juniper vSwitch configuration
+      junipernetworks.junos.junos_command:
+        commands:
+          - show configuration
+      register: junos_verify
+      when: inventory_hostname in groups['juniper_vjunosswitch']
+
+    - name: Display verification results
+      debug:
+        var: "{{ item }}"
+      loop:
+        - ios_verify
+        - nxos_verify
+        - junos_verify
+      when: item is defined

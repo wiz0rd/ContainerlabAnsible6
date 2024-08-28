@@ -1,0 +1,44 @@
+---
+- name: Backup Network Device Configurations
+  hosts: all
+  gather_facts: no
+  vars:
+    backup_dir: "/home/wiz0rd/Projects/git/Containerlab/Labs/ansible-6/clab-spine-leaf-topology"
+  tasks:
+    - name: Backup Juniper vJunos configurations
+      junipernetworks.junos.junos_config:
+        backup: yes
+        backup_options:
+          filename: "backup.conf"
+          dir_path: "{{ backup_dir }}/{{ inventory_hostname | regex_replace('clab-spine-leaf-topology-', '') }}/config"
+      when: "'juniper_vjunosswitch' in group_names"
+      vars:
+        ansible_connection: netconf
+        ansible_network_os: junos
+
+    - name: Backup Cisco CSR configurations
+      cisco.ios.ios_config:
+        backup: yes
+        backup_options:
+          filename: "backup.conf"
+          dir_path: "{{ backup_dir }}/{{ inventory_hostname | regex_replace('clab-spine-leaf-topology-', '') }}/config"
+      when: "'vr-csr' in group_names"
+      vars:
+        ansible_connection: network_cli
+        ansible_network_os: ios
+
+    - name: Backup Cisco NX-OS configurations
+      cisco.nxos.nxos_config:
+        backup: yes
+        backup_options:
+          filename: "backup.conf"
+          dir_path: "{{ backup_dir }}/{{ inventory_hostname | regex_replace('clab-spine-leaf-topology-', '') }}/config"
+      when: "'vr-n9kv' in group_names"
+      vars:
+        ansible_connection: network_cli
+        ansible_network_os: nxos
+
+    - name: Display backup status
+      debug:
+        msg: 
+          - "Configuration for {{ inventory_hostname }} has been backed up to {{ backup_dir }}/{{ inventory_hostname | regex_replace('clab-spine-leaf-topology-', '') }}/config/backup.conf"

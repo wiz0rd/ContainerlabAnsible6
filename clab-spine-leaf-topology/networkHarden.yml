@@ -1,0 +1,53 @@
+---
+- name: Generate and Apply Network Device Hardening Configs
+  hosts: all
+  gather_facts: no
+  vars:
+    ansible_command_timeout: 300  # Increase timeout to 5 minutes for all devices
+  
+  tasks:
+    - name: Generate config for Juniper vSwitch
+      template:
+        src: templates/junos.j2
+        dest: "./{{ inventory_hostname }}_junos.tmp"
+      when: inventory_hostname in groups['juniper_vjunosswitch']
+
+    - name: Generate config for Cisco CSR
+      template:
+        src: templates/csr.j2
+        dest: "./{{ inventory_hostname }}_csr.tmp"
+      when: inventory_hostname in groups['vr-csr']
+
+    - name: Generate config for Cisco N9KV
+      template:
+        src: templates/nxos.j2
+        dest: "./{{ inventory_hostname }}_nxos.tmp"
+      when: inventory_hostname in groups['vr-n9kv']
+
+    - name: Push config to Juniper vSwitch
+      junipernetworks.junos.junos_config:
+        src: "./{{ inventory_hostname }}_junos.tmp"
+        update: merge
+      register: junos_diff
+      when: inventory_hostname in groups['juniper_vjunosswitch']
+
+    - name: Push config to Cisco CSR
+      cisco.ios.ios_config:
+        src: "./{{ inventory_hostname }}_csr.tmp"
+      register: csr_diff
+      when: inventory_hostname in groups['vr-csr']
+
+    - name: Push config to Cisco N9KV
+      cisco.nxos.nxos_config:
+        src: "./{{ inventory_hostname }}_nxos.tmp"
+      register: nxos_diff
+      when: inventory_hostname in groups['vr-n9kv']
+
+    - name: Display config differences
+      debug:
+        var: "{{ item }}"
+      loop:
+        - junos_diff
+        - csr_diff
+        - nxos_diff
+      when: item is defined

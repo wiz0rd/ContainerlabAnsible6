@@ -1,0 +1,39 @@
+set system login message "Authorized access only. All activity may be monitored and reported."
+set system login class super-user-local permissions all
+
+set system services ssh protocol-version v2
+set system services ssh max-sessions-per-connection 3
+
+{% if remove_telnet %}
+delete system services telnet
+{% endif %}
+
+set system syslog user * any emergency
+set system syslog file messages any notice
+set system syslog file messages authorization info
+set system syslog file interactive-commands interactive-commands any
+
+set system authentication-order tacplus
+set system authentication-order password
+set system tacplus-server {{ tacacs_server }} secret "{{ tacacs_secret }}"
+set system tacplus-server {{ tacacs_server }} source-address {{ mgmt_ip }}
+
+set protocols lldp interface all
+
+{% if configure_ntp %}
+{% for server in ntp_servers %}
+set system ntp server {{ server }}
+{% endfor %}
+{% endif %}
+
+{% if configure_snmp %}
+set snmp community {{ snmp_community }} authorization read-only
+{% if snmp_location is defined %}
+set snmp location "{{ snmp_location }}"
+{% endif %}
+{% if snmp_contact is defined %}
+set snmp contact "{{ snmp_contact }}"
+{% endif %}
+{% endif %}
+
+set system host-name {{ inventory_hostname }}

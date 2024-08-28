@@ -1,0 +1,76 @@
+---
+- name: Network Device Connectivity Check and Hardening
+  hosts: all
+  gather_facts: no
+  vars:
+    ansible_command_timeout: 30  # Reduced timeout
+
+  tasks:
+    - name: Ping check
+      ping:
+      register: ping_result
+
+    - name: Display ping results
+      debug:
+        var: ping_result
+
+    - name: Generate config for Cisco CSR
+      template:
+        src: templates/csr.j2
+        dest: "./{{ inventory_hostname }}_csr.tmp"
+      when: inventory_hostname in groups['vr-csr']
+
+    - name: Generate config for Cisco N9KV
+      template:
+        src: templates/nxos.j2
+        dest: "./{{ inventory_hostname }}_nxos.tmp"
+      when: inventory_hostname in groups['vr-n9kv']
+
+    - name: Generate config for Juniper vSwitch
+      template:
+        src: templates/junos.j2
+        dest: "./{{ inventory_hostname }}_junos.tmp"
+      when: inventory_hostname in groups['juniper_vjunosswitch']
+
+    - name: Display generated config for Cisco CSR
+      debug:
+        msg: "{{ lookup('file', './{{ inventory_hostname }}_csr.tmp') }}"
+      when: inventory_hostname in groups['vr-csr']
+
+    - name: Display generated config for Cisco N9KV
+      debug:
+        msg: "{{ lookup('file', './{{ inventory_hostname }}_nxos.tmp') }}"
+      when: inventory_hostname in groups['vr-n9kv']
+
+    - name: Display generated config for Juniper vSwitch
+      debug:
+        msg: "{{ lookup('file', './{{ inventory_hostname }}_junos.tmp') }}"
+      when: inventory_hostname in groups['juniper_vjunosswitch']
+
+    - name: Apply config to Cisco CSR
+      cisco.ios.ios_config:
+        src: "./{{ inventory_hostname }}_csr.tmp"
+      register: ios_diff
+      when: inventory_hostname in groups['vr-csr']
+
+    - name: Apply config to Cisco N9KV
+      cisco.nxos.nxos_config:
+        src: "./{{ inventory_hostname }}_nxos.tmp"
+      register: nxos_diff
+      when: inventory_hostname in groups['vr-n9kv']
+
+    - name: Apply config to Juniper vSwitch
+      junipernetworks.junos.junos_config:
+        src: "./{{ inventory_hostname }}_junos.tmp"
+        update: merge
+      register: junos_diff
+      when: inventory_hostname in groups['juniper_vjunosswitch']
+
+    - name: Display config differences
+      debug:
+        var: "{{ item }}"
+      loop:
+        - ios_diff
+        - nxos_diff
+        - junos_diff
+      when: item is defined

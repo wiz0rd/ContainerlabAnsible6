@@ -1,0 +1,55 @@
+all:
+  vars:
+    ansible_httpapi_use_proxy: false
+    tacacs_server: 10.0.0.1
+    tacacs_secret: your_tacacs_secret
+    domain_name: example.com
+    ntp_servers:
+      - 192.168.1.1  # Replace with actual IP addresses
+      - 192.168.1.2  # Replace with actual IP addresses
+    remove_telnet: true
+    configure_ntp: true
+    configure_snmp: true
+    snmp_community: public_ro
+    snmp_location: "Data Center 1"
+    snmp_contact: "admin@example.com"
+    syslog_servers:
+      - 10.0.0.2
+      - 10.0.0.3
+  children:
+    juniper_vjunosswitch:
+      vars:
+        ansible_connection: netconf
+        ansible_network_os: junos
+        ansible_user: admin
+        ansible_password: admin@123
+        mgmt_ip: "{{ ansible_host }}"
+      hosts:
+        clab-spine-leaf-topology-vjunosswitch-leaf:
+          ansible_host: 172.20.20.7
+        clab-spine-leaf-topology-vjunosswitch-spine:
+          ansible_host: 172.20.20.6
+    vr-csr:
+      vars:
+        ansible_connection: network_cli
+        ansible_network_os: ios
+        ansible_user: admin
+        ansible_password: admin
+      hosts:
+        clab-spine-leaf-topology-csr-leaf:
+          ansible_host: 172.20.20.3
+        clab-spine-leaf-topology-csr-spine:
+          ansible_host: 172.20.20.2
+    vr-n9kv:
+      vars:
+        ansible_connection: network_cli
+        ansible_network_os: nxos
+        ansible_user: admin
+        ansible_password: admin
+        configure_vlan: false
+        admin_password: admin
+      hosts:
+        clab-spine-leaf-topology-n9kv-leaf:
+          ansible_host: 172.20.20.5
+        clab-spine-leaf-topology-n9kv-spine:
+          ansible_host: 172.20.20.4

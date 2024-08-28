@@ -1,0 +1,88 @@
+---
+- name: Troubleshoot Cisco Device Connectivity and Configuration
+  hosts: vr-csr,vr-n9kv
+  gather_facts: no
+  vars:
+    ansible_command_timeout: 300
+
+  tasks:
+    - name: Ping the device's management IP
+      net_ping:
+        dest: "{{ ansible_host }}"
+      register: ping_result
+      ignore_errors: yes
+
+    - name: Display ping result
+      debug:
+        var: ping_result
+
+    - name: Test SSH connectivity
+      raw: "echo 'Connection successful'"
+      register: ssh_result
+      ignore_errors: yes
+
+    - name: Display SSH result
+      debug:
+        var: ssh_result
+
+    - name: Show running config (IOS)
+      cisco.ios.ios_command:
+        commands: show running-config
+      register: ios_config
+      when: inventory_hostname in groups['vr-csr']
+      ignore_errors: yes
+
+    - name: Show running config (NX-OS)
+      cisco.nxos.nxos_command:
+        commands: show running-config
+      register: nxos_config
+      when: inventory_hostname in groups['vr-n9kv']
+      ignore_errors: yes
+
+    - name: Display current config
+      debug:
+        var: ios_config if (inventory_hostname in groups['vr-csr']) else nxos_config
+
+    - name: Generate config for Cisco CSR
+      template:
+        src: templates/csr.j2
+        dest: "./{{ inventory_hostname }}_csr.tmp"
+      when: inventory_hostname in groups['vr-csr']
+
+    - name: Generate config for Cisco N9KV
+      template:
+        src: templates/nxos.j2
+        dest: "./{{ inventory_hostname }}_nxos.tmp"
+      when: inventory_hostname in groups['vr-n9kv']
+
+    - name: Display generated config content for CSR
+      debug:
+        msg: "{{ lookup('file', './{{ inventory_hostname }}_csr.tmp') }}"
+      when: inventory_hostname in groups['vr-csr']
+
+    - name: Display generated config content for N9KV
+      debug:
+        msg: "{{ lookup('file', './{{ inventory_hostname }}_nxos.tmp') }}"
+      when: inventory_hostname in groups['vr-n9kv']
+
+    - name: Push small config change to Cisco CSR
+      cisco.ios.ios_config:
+        lines:
+          - description Test interface
+        parents: interface Loopback0
+      register: small_change_csr
+      when: inventory_hostname in groups['vr-csr']
+      ignore_errors: yes
+
+    - name: Push small config change to Cisco N9KV
+      cisco.nxos.nxos_config:
+        lines:
+          - description Test interface
+        parents: interface loopback0
+      register: small_change_nxos
+      when: inventory_hostname in groups['vr-n9kv']
+      ignore_errors: yes
+
+    - name: Display small change result
+      debug:
+        var: small_change_csr if (inventory_hostname in groups['vr-csr']) else small_change_nxos

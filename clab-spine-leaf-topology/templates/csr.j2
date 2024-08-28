@@ -1,0 +1,47 @@
+service password-encryption
+service tcp-keepalives-in
+service tcp-keepalives-out
+no service pad
+
+hostname {{ inventory_hostname }}
+
+banner login ^
+Authorized access only. All activity may be monitored and reported.
+^
+
+aaa new-model
+aaa authentication login default group tacacs+ local
+aaa authorization exec default group tacacs+ local if-authenticated
+aaa accounting exec default start-stop group tacacs+
+
+tacacs server TACACS-SERVER
+ address ipv4 {{ tacacs_server }}
+ key {{ tacacs_secret }}
+
+ip domain-name {{ domain_name }}
+crypto key generate rsa modulus 2048
+
+line con 0
+ logging synchronous
+ login authentication default
+line vty 0 4
+ access-class 10 in
+ logging synchronous
+ login authentication default
+ transport input ssh
+
+ip ssh version 2
+ip ssh authentication-retries 3
+ip ssh time-out 60
+
+{% for server in ntp_servers %}
+ntp server {{ server }}
+{% endfor %}
+
+lldp run
+
+{% if configure_snmp %}
+snmp-server community {{ snmp_community }} RO
+snmp-server location {{ snmp_location }}
+snmp-server contact {{ snmp_contact }}
+{% endif %}
