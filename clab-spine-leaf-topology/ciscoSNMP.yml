@@ -1,0 +1,28 @@
+---
+- name: Provision SNMP Configuration on NX-OS and CSR devices
+  hosts: all
+  gather_facts: no
+  tasks:
+
+    - name: Provision SNMP Configuration on CSR devices
+      cisco.ios.ios_config:
+        lines:
+          - snmp-server user wiz0rdsw0rld OBSERVIUM v3 auth sha wiz0rdsw0rld priv aes 128 wiz0rdsw0rld
+          - snmp-server group OBSERVIUM v3 priv
+          - snmp-server host 172.16.40.237 version 3 priv wiz0rdsw0rld
+          - snmp-server enable traps
+      when: "'vr-csr' in group_names"
+      vars:
+        ansible_connection: network_cli
+        ansible_network_os: ios
+
+    - name: Provision SNMP Configuration on NX-OS devices
+      cisco.nxos.nxos_config:
+        lines:
+          - snmp-server user wiz0rdsw0rld network-admin auth sha wiz0rdsw0rld priv aes-128 wiz0rdsw0rld
+          - snmp-server host 172.16.40.237 traps version 3 priv wiz0rdsw0rld
+          - snmp-server enable traps
+      when: "'vr-n9kv' in group_names"
+      vars:
+        ansible_connection: network_cli
+        ansible_network_os: nxos

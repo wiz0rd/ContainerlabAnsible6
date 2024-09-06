@@ -1,0 +1,101 @@
+---
+- name: Ensure SNMP configuration on NX-OS and CSR devices
+  hosts: all
+  gather_facts: no
+  vars:
+    snmp_config:
+      - snmp-server user wiz0rdsw0rld OBSERVIUM v3 auth sha wiz0rdsw0rld priv aes 128 wiz0rdsw0rld
+      - snmp-server group OBSERVIUM v3 priv
+      - snmp-server host 172.16.40.237 version 3 priv wiz0rdsw0rld
+      - snmp-server enable traps
+  tasks:
+
+    - name: Check SNMP configuration using Netconf (CSR)
+      ansible.netcommon.netconf_get:
+        datastore: running
+        filter: /native/snmp-server/user
+      register: csr_snmp_check
+      when: "'csr' in group_names"
+      vars:
+        ansible_network_os: iosxe
+
+    - name: Enforce SNMP configuration on CSR (if not in desired state)
+      ansible.netcommon.netconf_config:
+        target: running
+        config: |
+          <config>
+            <native xmlns="http://cisco.com/ns/yang/Cisco-IOS-XE-native">
+              <snmp-server>
+                <user>
+                  <name>wiz0rdsw0rld</name>
+                  <group>OBSERVIUM</group>
+                  <version>v3</version>
+                  <auth>
+                    <type>sha</type>
+                    <password>wiz0rdsw0rld</password>
+                  </auth>
+                  <priv>
+                    <type>aes</type>
+                    <password>wiz0rdsw0rld</password>
+                  </priv>
+                </user>
+                <group>
+                  <name>OBSERVIUM</name>
+                  <version>v3</version>
+                  <privilege>priv</privilege>
+                </group>
+                <host>
+                  <ip>172.16.40.237</ip>
+                  <version>v3</version>
+                  <privilege>priv</privilege>
+                  <username>wiz0rdsw0rld</username>
+                </host>
+              </snmp-server>
+            </native>
+          </config>
+      when: csr_snmp_check is not defined or csr_snmp_check.response != 'desired state config'  # Define the right condition
+
+    - name: Check SNMP configuration using Netconf (NX-OS)
+      ansible.netcommon.netconf_get:
+        datastore: running
+        filter: /system/snmp-server/user
+      register: nxos_snmp_check
+      when: "'nxos' in group_names"
+      vars:
+        ansible_network_os: nxos
+
+    - name: Enforce SNMP configuration on NX-OS (if not in desired state)
+      ansible.netcommon.netconf_config:
+        target: running
+        config: |
+          <config>
+            <system xmlns="http://cisco.com/ns/yang/cisco-nx-os-device">
+              <snmp-server>
+                <user>
+                  <name>wiz0rdsw0rld</name>
+                  <group>OBSERVIUM</group>
+                  <version>v3</version>
+                  <auth>
+                    <type>sha</type>
+                    <password>wiz0rdsw0rld</password>
+                  </auth>
+                  <priv>
+                    <type>aes</type>
+                    <password>wiz0rdsw0rld</password>
+                  </priv>
+                </user>
+                <group>
+                  <name>OBSERVIUM</name>
+                  <version>v3</version>
+                  <privilege>priv</privilege>
+                </group>
+                <host>
+                  <ip>172.16.40.237</ip>
+                  <version>v3</version>
+                  <privilege>priv</privilege>
+                  <username>wiz0rdsw0rld</username>
+                </host>
+              </snmp-server>
+            </system>
+          </config>
+      when: nxos_snmp_check is not defined or nxos_snmp_check.response != 'desired state config'  # Define the right condition
