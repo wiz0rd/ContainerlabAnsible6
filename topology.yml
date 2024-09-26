@@ -1,49 +1,87 @@
 name: spine-leaf-topology
-
 topology:
   nodes:
     csr-spine:
       kind: vr-csr
       image: vrnetlab/vr-csr:17.03.08
       mgmt-ipv4: 172.20.20.2
+      startup-config: ./clab-spine-leaf-topology/csr-spine/config/backup.conf
     
     csr-leaf:
       kind: vr-csr
       image: vrnetlab/vr-csr:17.03.08
       mgmt-ipv4: 172.20.20.3
+      startup-config: ./clab-spine-leaf-topology/csr-leaf/config/backup.conf
     
     n9kv-spine:
       kind: vr-n9kv
       image: vrnetlab/vr-n9kv:10.5.1
       mgmt-ipv4: 172.20.20.4
+      startup-config: ./clab-spine-leaf-topology/n9kv-spine/config/backup.conf
     
     n9kv-leaf:
       kind: vr-n9kv
       image: vrnetlab/vr-n9kv:10.5.1
       mgmt-ipv4: 172.20.20.5
+      startup-config: ./clab-spine-leaf-topology/n9kv-leaf/config/backup.conf
     
-    vjunosswitch-spine:
-      kind: juniper_vjunosswitch
-      image: vrnetlab/vr-vjunosswitch:23.2R1.14
+    vjunosrouter-spine:
+      kind: juniper_vjunosrouter
+      image: vrnetlab/vr-vjunosrouter:23.2R1.15
       mgmt-ipv4: 172.20.20.6
+      startup-config: ./clab-spine-leaf-topology/vjunosrouter-spine/config/backup.conf
     
-    vjunosswitch-leaf:
-      kind: juniper_vjunosswitch
-      image: vrnetlab/vr-vjunosswitch:23.2R1.14
+    vjunosrouter-leaf:
+      kind: juniper_vjunosrouter
+      image: vrnetlab/vr-vjunosrouter:23.2R1.15
       mgmt-ipv4: 172.20.20.7
+      startup-config: ./clab-spine-leaf-topology/vjunosrouter-leaf/config/backup.conf
+    
+    # Alpine Linux nodes
+    alpine-csr-1:
+      kind: linux
+      image: alpine:latest
+    
+    alpine-csr-2:
+      kind: linux
+      image: alpine:latest
+    
+    alpine-n9kv-1:
+      kind: linux
+      image: alpine:latest
+    
+    alpine-n9kv-2:
+      kind: linux
+      image: alpine:latest
+    
+    alpine-junos-1:
+      kind: linux
+      image: alpine:latest
+    
+    alpine-junos-2:
+      kind: linux
+      image: alpine:latest
 
   links:
-    # Dual connections between spine and leaf nodes
-    - endpoints: ["csr-spine:eth1", "csr-leaf:eth1"]
+    # Dual connections between spine and leaf nodes for LAGs
     - endpoints: ["csr-spine:eth2", "csr-leaf:eth2"]
+    - endpoints: ["csr-spine:eth3", "csr-leaf:eth3"]
     
-    - endpoints: ["n9kv-spine:eth1", "n9kv-leaf:eth1"]
     - endpoints: ["n9kv-spine:eth2", "n9kv-leaf:eth2"]
+    - endpoints: ["n9kv-spine:eth3", "n9kv-leaf:eth3"]
     
-    - endpoints: ["vjunosswitch-spine:eth1", "vjunosswitch-leaf:eth1"]
-    - endpoints: ["vjunosswitch-spine:eth2", "vjunosswitch-leaf:eth2"]
+    - endpoints: ["vjunosrouter-spine:eth1", "vjunosrouter-leaf:eth1"]
+    - endpoints: ["vjunosrouter-spine:eth2", "vjunosrouter-leaf:eth2"]
     
     # Connections between spine nodes
-    - endpoints: ["csr-spine:eth3", "n9kv-spine:eth3"]
-    - endpoints: ["csr-spine:eth4", "vjunosswitch-spine:eth3"]
-    - endpoints: ["n9kv-spine:eth4", "vjunosswitch-spine:eth4"]
+    - endpoints: ["csr-spine:eth4", "n9kv-spine:eth4"]
+    - endpoints: ["csr-spine:eth5", "vjunosrouter-spine:eth3"]
+    - endpoints: ["n9kv-spine:eth5", "vjunosrouter-spine:eth4"]
+    
+    # Connections for Alpine Linux nodes
+    - endpoints: ["alpine-csr-1:eth1", "csr-leaf:eth4"]
+    - endpoints: ["alpine-csr-2:eth1", "csr-leaf:eth5"]
+    - endpoints: ["alpine-n9kv-1:eth1", "n9kv-leaf:eth4"]
+    - endpoints: ["alpine-n9kv-2:eth1", "n9kv-leaf:eth5"]
+    - endpoints: ["alpine-junos-1:eth1", "vjunosrouter-leaf:eth3"]
+    - endpoints: ["alpine-junos-2:eth1", "vjunosrouter-leaf:eth4"]

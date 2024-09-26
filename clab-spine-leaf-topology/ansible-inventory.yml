@@ -5,16 +5,30 @@ all:
     # module does not attempt using any global http proxy.
     ansible_httpapi_use_proxy: false
   children:
-    juniper_vjunosswitch:
+    juniper_vjunosrouter:
       vars:
         # ansible_connection: set ansible_connection variable if required
         ansible_user: admin
         ansible_password: admin@123
       hosts:
-        clab-spine-leaf-topology-vjunosswitch-leaf:
+        clab-spine-leaf-topology-vjunosrouter-leaf:
           ansible_host: 172.20.20.7
-        clab-spine-leaf-topology-vjunosswitch-spine:
+        clab-spine-leaf-topology-vjunosrouter-spine:
           ansible_host: 172.20.20.6
+    linux:
+      hosts:
+        clab-spine-leaf-topology-alpine-csr-1:
+          ansible_host: 172.20.20.11
+        clab-spine-leaf-topology-alpine-csr-2:
+          ansible_host: 172.20.20.9
+        clab-spine-leaf-topology-alpine-junos-1:
+          ansible_host: 172.20.20.8
+        clab-spine-leaf-topology-alpine-junos-2:
+          ansible_host: 172.20.20.13
+        clab-spine-leaf-topology-alpine-n9kv-1:
+          ansible_host: 172.20.20.12
+        clab-spine-leaf-topology-alpine-n9kv-2:
+          ansible_host: 172.20.20.10
     vr-csr:
       vars:
         # ansible_connection: set ansible_connection variable if required

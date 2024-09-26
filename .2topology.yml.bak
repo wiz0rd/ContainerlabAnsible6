@@ -64,24 +64,24 @@ topology:
 
   links:
     # Dual connections between spine and leaf nodes for LAGs
-    - endpoints: ["csr-spine:eth2", "csr-leaf:eth2"]
-    - endpoints: ["csr-spine:eth3", "csr-leaf:eth3"]
+    - endpoints: ["csr-spine:Gi3", "csr-leaf:Gi3"]
+    - endpoints: ["csr-spine:Gi4", "csr-leaf:Gi4"]
     
+    - endpoints: ["n9kv-spine:eth1", "n9kv-leaf:eth1"]
     - endpoints: ["n9kv-spine:eth2", "n9kv-leaf:eth2"]
-    - endpoints: ["n9kv-spine:eth3", "n9kv-leaf:eth3"]
     
-    - endpoints: ["vjunosrouter-spine:eth1", "vjunosrouter-leaf:eth1"]
-    - endpoints: ["vjunosrouter-spine:eth2", "vjunosrouter-leaf:eth2"]
+    - endpoints: ["vjunosrouter-spine:ge-0/0/0", "vjunosrouter-leaf:ge-0/0/0"]
+    - endpoints: ["vjunosrouter-spine:ge-0/0/1", "vjunosrouter-leaf:ge-0/0/1"]
     
     # Connections between spine nodes
-    - endpoints: ["csr-spine:eth4", "n9kv-spine:eth4"]
-    - endpoints: ["csr-spine:eth5", "vjunosrouter-spine:eth3"]
-    - endpoints: ["n9kv-spine:eth5", "vjunosrouter-spine:eth4"]
+    - endpoints: ["csr-spine:Gi5", "n9kv-spine:eth3"]
+    - endpoints: ["csr-spine:Gi6", "vjunosrouter-spine:ge-0/0/2"]
+    - endpoints: ["n9kv-spine:eth4", "vjunosrouter-spine:ge-0/0/3"]
     
     # Connections for Alpine Linux nodes
-    - endpoints: ["alpine-csr-1:eth1", "csr-leaf:eth4"]
-    - endpoints: ["alpine-csr-2:eth1", "csr-leaf:eth5"]
-    - endpoints: ["alpine-n9kv-1:eth1", "n9kv-leaf:eth4"]
-    - endpoints: ["alpine-n9kv-2:eth1", "n9kv-leaf:eth5"]
-    - endpoints: ["alpine-junos-1:eth1", "vjunosrouter-leaf:eth3"]
-    - endpoints: ["alpine-junos-2:eth1", "vjunosrouter-leaf:eth4"]
+    - endpoints: ["alpine-csr-1:eth1", "csr-leaf:Gi5"]
+    - endpoints: ["alpine-csr-2:eth1", "csr-leaf:Gi6"]
+    - endpoints: ["alpine-n9kv-1:eth1", "n9kv-leaf:eth3"]
+    - endpoints: ["alpine-n9kv-2:eth1", "n9kv-leaf:eth4"]
+    - endpoints: ["alpine-junos-1:eth1", "vjunosrouter-leaf:ge-0/0/2"]
+    - endpoints: ["alpine-junos-2:eth1", "vjunosrouter-leaf:ge-0/0/3"]

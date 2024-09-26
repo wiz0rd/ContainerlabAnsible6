@@ -36,6 +36,31 @@ topology:
       image: vrnetlab/vr-vjunosswitch:23.2R1.14
       mgmt-ipv4: 172.20.20.7
       startup-config: ./clab-spine-leaf-topology/vjunosswitch-leaf/config/backup.conf
+    
+    # New Alpine Linux nodes
+    alpine-csr-1:
+      kind: linux
+      image: alpine:latest
+    
+    alpine-csr-2:
+      kind: linux
+      image: alpine:latest
+    
+    alpine-n9kv-1:
+      kind: linux
+      image: alpine:latest
+    
+    alpine-n9kv-2:
+      kind: linux
+      image: alpine:latest
+    
+    alpine-junos-1:
+      kind: linux
+      image: alpine:latest
+    
+    alpine-junos-2:
+      kind: linux
+      image: alpine:latest
 
   links:
     # Dual connections between spine and leaf nodes for LAGs
@@ -52,3 +77,11 @@ topology:
     - endpoints: ["csr-spine:eth4", "n9kv-spine:eth4"]
     - endpoints: ["csr-spine:eth5", "vjunosswitch-spine:eth3"]
     - endpoints: ["n9kv-spine:eth5", "vjunosswitch-spine:eth4"]
+    
+    # New connections for Alpine Linux nodes
+    - endpoints: ["alpine-csr-1:eth1", "csr-leaf:eth4"]
+    - endpoints: ["alpine-csr-2:eth1", "csr-leaf:eth5"]
+    - endpoints: ["alpine-n9kv-1:eth1", "n9kv-leaf:eth4"]
+    - endpoints: ["alpine-n9kv-2:eth1", "n9kv-leaf:eth5"]
+    - endpoints: ["alpine-junos-1:eth1", "vjunosswitch-leaf:eth3"]
+    - endpoints: ["alpine-junos-2:eth1", "vjunosswitch-leaf:eth4"]
